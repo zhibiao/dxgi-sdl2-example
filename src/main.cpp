@@ -8,6 +8,7 @@
 ID3D11Device *m_hDevice = NULL;
 ID3D11DeviceContext *m_hContext = NULL;
 IDXGIOutputDuplication *m_hDeskDupl = NULL;
+DXGI_OUTDUPL_DESC m_duplDesc;
 ID3D11Texture2D *hAcquiredDesktopImage = NULL;
 DXGI_OUTPUT_DESC m_dxgiOutDesc;
 UINT WIDTH = 1920, HEIGHT = 1080;
@@ -116,6 +117,17 @@ HRESULT DXGI_Setup()
     // Create desktop duplication
     //
     hr = hDxgiOutput1->DuplicateOutput(m_hDevice, &m_hDeskDupl);
+    m_hDeskDupl->GetDesc(&m_duplDesc);
+
+    if (m_duplDesc.DesktopImageInSystemMemory)
+    {
+        std::cout << "Desc: CPU shared with GPU" << std::endl;
+    }
+    else
+    {
+        std::cout << "Desc: CPU not shared with GPU" << std::endl;
+    }
+
     hDxgiOutput1->Release();
     hDxgiOutput1 = NULL;
     if (FAILED(hr))
@@ -131,8 +143,8 @@ HRESULT DXGI_AcquireFrame()
     HRESULT hr = S_OK;
     IDXGIResource *hDesktopResource = NULL;
     DXGI_OUTDUPL_FRAME_INFO FrameInfo;
-
-    hr = m_hDeskDupl->AcquireNextFrame(0, &FrameInfo, &hDesktopResource);
+    m_hDeskDupl->ReleaseFrame();
+    hr = m_hDeskDupl->AcquireNextFrame(100, &FrameInfo, &hDesktopResource);
 
     if (FAILED(hr))
     {
